@@ -4,12 +4,32 @@ import Settings from "./components/Settings";
 import Leaderboard from "./components/Leaderboard";
 import Start from "./components/Start";
 import { useReducer } from "react";
-import { initialSettings } from "./data/settings";
+import { currentSettings } from "./data/settings";
 
 function reducer(state, action) {
   switch (action.type) {
-    case "change_theme": {
-      return;
+    case "CHANGE_THEME": {
+      return {
+        ...state,
+        theme: action.payload,
+      };
+    }
+    case "CHANGE_DIFFICULTY": {
+      let newGrid = 0;
+      if (action.payload === "easy") newGrid = 8;
+      if (action.payload === "medium") newGrid = 12;
+      if (action.payload === "hard") newGrid = 16;
+      return {
+        ...state,
+        difficulty: action.payload,
+        grid: newGrid,
+      };
+    }
+    case "CHANGE_SOUND": {
+      return {
+        ...state,
+        sound: action.payload,
+      };
     }
     default: {
       return state;
@@ -18,7 +38,7 @@ function reducer(state, action) {
 }
 
 function App() {
-  const [state, dispatch] = useReducer(reducer, initialSettings);
+  const [state, dispatch] = useReducer(reducer, currentSettings);
 
   return (
     <div className="app">

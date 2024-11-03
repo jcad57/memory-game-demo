@@ -1,5 +1,12 @@
+import BackButton from "./BackButton";
+
 function Leaderboard() {
-  return <div>leaderboard</div>;
+  return (
+    <div>
+      <BackButton />
+      Coming Soon
+    </div>
+  );
 }
 
 export default Leaderboard;

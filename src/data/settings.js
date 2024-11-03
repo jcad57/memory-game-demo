@@ -1,19 +1,14 @@
 const settings = {
   theme: ["punk", "nineties", "fnaf", "nature"],
   difficulty: ["easy", "medium", "hard"],
+  sound: ["on", "off"],
 };
 
-const initialSettings = [
-  {
-    id: 1,
-    name: "theme",
-    value: "punk",
-  },
-  {
-    id: 2,
-    name: "difficulty",
-    value: "easy",
-  },
-];
+const currentSettings = {
+  theme: "punk",
+  difficulty: "easy",
+  grid: 8,
+  sound: "on",
+};
 
-export { settings, initialSettings };
+export { settings, currentSettings };

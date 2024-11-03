@@ -109,6 +109,11 @@ a:hover {
   cursor: pointer;
 }
 
+.setting-list {
+  display: flex;
+  list-style: none;
+}
+
 .setting-item:hover {
   color: blue;
 }
@@ -118,4 +123,14 @@ a:hover {
 }
 
 .game-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.game-card {
+  width: 150px;
+  height: 150px;
+  background-color: grey;
+  border: 1px solid black;
+  margin: 1rem;
 }
