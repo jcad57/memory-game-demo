@@ -15,14 +15,16 @@ function reducer(state, action) {
       };
     }
     case "CHANGE_DIFFICULTY": {
-      let newGrid = 0;
-      if (action.payload === "easy") newGrid = 8;
-      if (action.payload === "medium") newGrid = 12;
-      if (action.payload === "hard") newGrid = 16;
+      // Set the number of cards needed based on difficulty
+      let numberOfOriginalCards = 0;
+      if (action.payload === "easy") numberOfOriginalCards = 4;
+      if (action.payload === "medium") numberOfOriginalCards = 6;
+      if (action.payload === "hard") numberOfOriginalCards = 8;
+
       return {
         ...state,
         difficulty: action.payload,
-        grid: newGrid,
+        grid: numberOfOriginalCards,
       };
     }
     case "CHANGE_SOUND": {
