@@ -1,11 +1,11 @@
 import menuItems from "../data/menu-items";
 import MenuItem from "./MenuItem";
 
-function Menu() {
+export default function Menu() {
   return (
-    <div className="menu-container">
-      <div className="menu">
-        <h1 className="menu-title">'MemberMe?</h1>
+    <div className="page-container">
+      <h1 className="menu-title fc-yellow">'MemberMe?</h1>
+      <div>
         {menuItems.map((item, i) => (
           <div className="menu-item">
             <MenuItem text={item} key={i} />
@@ -15,5 +15,3 @@ function Menu() {
     </div>
   );
 }
-
-export default Menu;

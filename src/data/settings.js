@@ -1,14 +1,16 @@
-const settings = {
-  theme: ["punk", "nineties", "fnaf", "nature"],
+import { pastel, punk, fnaf, nineties, nature, random } from "./themes";
+
+const possibleSettings = {
+  theme: ["pastel", "punk", "nineties", "fnaf", "nature", "random"],
   difficulty: ["easy", "medium", "hard"],
   sound: ["on", "off"],
 };
 
 const currentSettings = {
-  theme: "punk",
-  difficulty: "easy",
-  grid: 8,
-  sound: "on",
+  theme: "random",
+  cards: random,
+  difficulty: "hard",
+  sound: "off",
 };
 
-export { settings, currentSettings };
+export { possibleSettings, currentSettings };

@@ -1,76 +1,160 @@
-import { useEffect, useState } from "react";
-import GameCard from "./GameCard";
-import BackButton from "./BackButton";
+import { useEffect, useReducer } from "react";
+import Card from "./Card";
+import Button from "./Button";
+import Leaderboard from "./Leaderboard";
 
-const tempCards = ["#7156e9", "#764873", "#f967a9", "#967ab1", "#c3d9f7", "#3fc3e9", "#32ac6d", "#b5b7a5"];
+const initialGameplayState = {
+  isPlaying: true,
+  randomCards: [],
+  flippedCards: [],
+  matchedCards: [],
+  attempts: 0,
+  multiplier: 1,
+  score: 0,
+  addNewScoreLeaderboard: false,
+};
 
-function Start({ settings }) {
-  const { theme, difficulty, grid, sound } = settings;
-  const [randomCards, setRandomCards] = useState([]);
-  const [flippedCards, setFlippedCards] = useState([]);
-  const [matchedCards, setMatchedCards] = useState([]);
-  const [attempts, setAttempts] = useState(0);
+function gameplayReducer(state, action) {
+  switch (action.type) {
+    case "TOGGLE_IS_PLAYING": {
+      return {
+        ...state,
+        isPlaying: action.payload,
+      };
+    }
+    case "SET_SHUFFLED_CARDS": {
+      return {
+        ...state,
+        randomCards: action.payload,
+      };
+    }
+    case "SET_FLIPPED_CARDS": {
+      return {
+        ...state,
+        flippedCards: [...state.flippedCards, action.payload],
+      };
+    }
+    case "CHECK_FOR_MATCH": {
+      let newMatchedCards = [];
+      let newScore;
+      let newMultiplier;
 
-  // Randomize the cards on mount
+      const [firstFlippedCard, secondFlippedCard] = state.flippedCards;
+      // Check if the two cards are a match using their index
+      if (state.randomCards[firstFlippedCard].content === state.randomCards[secondFlippedCard].content) {
+        // Add to matched array
+        newMatchedCards = [...state.matchedCards, firstFlippedCard, secondFlippedCard];
+        // Update score & multiplier
+        newScore = state.score + 5 * state.multiplier;
+        newMultiplier = state.multiplier < 3 ? state.multiplier + 1 : state.multiplier;
+      } else {
+        // Reset
+        return {
+          ...state,
+          attempts: state.attempts + 1,
+          multiplier: 1,
+        };
+      }
+      return {
+        ...state,
+        matchedCards: newMatchedCards,
+        attempts: state.attempts + 1,
+        score: newScore,
+        multiplier: newMultiplier,
+      };
+    }
+    case "CHECK_FOR_WIN": {
+      if (state.matchedCards.length === state.randomCards.length) {
+        return {
+          ...state,
+          isPlaying: false,
+          addNewScoreLeaderboard: true,
+        };
+      }
+      return state;
+    }
+    case "RESET_FLIPPED_CARDS": {
+      return {
+        ...state,
+        flippedCards: [],
+      };
+    }
+
+    default:
+      return state;
+  }
+}
+
+export default function Start({ settings, leaderboard, collection, db, addDoc }) {
+  const { cards, difficulty } = settings;
+
+  const [gameplayState, dispatchAction] = useReducer(gameplayReducer, initialGameplayState);
+  const { isPlaying, randomCards, flippedCards, matchedCards, attempts, score, multiplier } = gameplayState;
+
   useEffect(() => {
-    let cards = tempCards;
-    if (difficulty === "easy") cards = tempCards.slice(0, 4);
-    if (difficulty === "medium") cards = tempCards.slice(0, 6);
-
-    const imagePairs = [...cards, ...cards];
-    const randomized = imagePairs
+    // Shuffle the cards on mount
+    let newCards;
+    if (difficulty === "easy") newCards = cards.slice(0, 4);
+    if (difficulty === "medium") newCards = cards.slice(0, 8);
+    if (difficulty === "hard") newCards = cards.slice(0, 12);
+    const newCardPairs = [...newCards, ...newCards];
+    const newRandomizedCards = newCardPairs
       .sort(() => Math.random() - 0.5)
       .map((card, index) => ({ id: index, content: card, flipped: false }));
-    setRandomCards(randomized);
-  }, [difficulty]);
+    dispatchAction({ type: "SET_SHUFFLED_CARDS", payload: newRandomizedCards });
+  }, [cards, difficulty]);
 
-  console.log(randomCards);
-
-  // Store the flipped card
   function handleCardClick(card) {
-    if (flippedCards.length === 2 || matchedCards.length === randomCards.length) return;
-    setFlippedCards((prevFlippedCards) => [...prevFlippedCards, card.id]);
+    if (flippedCards.length < 2) dispatchAction({ type: "SET_FLIPPED_CARDS", payload: card.id });
+
+    if (flippedCards.length === 1) {
+      dispatchAction({ type: "CHECK_FOR_MATCH" });
+      setTimeout(() => {
+        dispatchAction({ type: "RESET_FLIPPED_CARDS" });
+      }, 1000);
+      dispatchAction({ type: "CHECK_FOR_WIN" });
+    }
   }
 
-  // Check for a match every time we have two flipped cards
-  useEffect(() => {
-    if (flippedCards.length !== 2) return;
-    const [firstFlippedCard, secondFlippedCard] = flippedCards;
-
-    if (randomCards[firstFlippedCard].content === randomCards[secondFlippedCard].content) {
-      setMatchedCards((prevMatchedCards) => [...prevMatchedCards, firstFlippedCard, secondFlippedCard]);
-    }
-    setAttempts((prevAttempts) => prevAttempts + 1);
-    // Delay setting the cards back
-    const interval = setInterval(() => {
-      setFlippedCards([]);
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [flippedCards, randomCards]);
-
-  console.log("flipped " + flippedCards);
-  console.log("matched " + matchedCards);
-
+  // console.log(matchedCards.length, randomCards.length);
   return (
     <>
-      <BackButton />
-      <div>Attempts: {attempts} </div>
-      <div className="game-board">
-        {randomCards &&
-          randomCards.map((card, i) => (
-            <GameCard
-              key={card.id}
-              id={card.id}
-              content={card.content}
-              flipped={flippedCards.includes(card.id)}
-              matched={matchedCards.includes(card.id)}
-              onClick={() => handleCardClick(card)}
-            />
-          ))}
-      </div>
+      {isPlaying === true && (
+        <div className="game-container">
+          <div className="hud-container">
+            <p>Attempts: {attempts} </p>
+            <p>Score: {score} </p>
+            <p>Multiplier: x{multiplier}</p>
+          </div>
+          <div className="game-board">
+            {randomCards.length > 0 ? (
+              randomCards.map((card, i) => (
+                <Card
+                  key={card.id}
+                  id={card.id}
+                  content={card.content}
+                  flipped={flippedCards.includes(card.id)}
+                  matched={matchedCards.includes(card.id)}
+                  onClick={() => handleCardClick(card)}
+                />
+              ))
+            ) : (
+              <span>Error</span>
+            )}
+          </div>
+          <Button type={"menu"} />
+        </div>
+      )}
+      {isPlaying === false && (
+        <Leaderboard
+          leaderboard={leaderboard}
+          addNewScoreLeaderboard={gameplayState.addNewScoreLeaderboard}
+          newScore={gameplayState.score}
+          collection={collection}
+          addDoc={addDoc}
+          db={db}
+        />
+      )}
     </>
   );
 }
-
-export default Start;
