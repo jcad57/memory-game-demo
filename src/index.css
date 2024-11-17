@@ -72,7 +72,7 @@ a:hover {
 }
 
 .app-container {
-  height: 100vh;
+  height: 100dvh;
   display: grid;
   align-items: center;
   justify-content: center;
